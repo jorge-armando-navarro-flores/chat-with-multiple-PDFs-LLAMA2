@@ -24,11 +24,11 @@ The application follows these steps to provide responses to your questions:
 ## Dependencies and Installation
 ----------------------------
 To install the MultiPDF Chat App, please follow these steps:
-1. Download Ollama library:
+1. Download [Ollama library](https://github.com/jmorganca/ollama)
    ```
    curl https://ollama.ai/install.sh | sh
    ```
-2. pull the chat model we will use:
+2. pull the chat model we will use [LLAMA2](https://ollama.ai/library/llama2)
    ```
    ollama pull llama2:70b-chat
    ```

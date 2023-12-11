@@ -40,7 +40,7 @@ def get_vectorstore(text_chunks):
 
 def get_conversation_chain(vectorstore):
     llm = ChatOllama(
-        model="llama2:70b-chat",
+        model="falcon:180b-chat",
         callback_manager=CallbackManager([StreamingStdOutCallbackHandler()]),
     )
     # llm = HuggingFaceHub(repo_id="google/flan-t5-xxl", model_kwargs={"temperature":0.5, "max_length":512})
