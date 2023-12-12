@@ -49,7 +49,9 @@ def get_text_chunks(text):
 
 @timeit
 def get_vectorstore(text_chunks):
-    embeddings = OllamaEmbeddings()
+    embeddings = OllamaEmbeddings(
+        # num_gpu=2
+    )
     # embeddings = HuggingFaceInstructEmbeddings(model_name="hkunlp/instructor-xl")
     vectorstore = FAISS.from_texts(texts=text_chunks, embedding=embeddings)
     return vectorstore
@@ -60,6 +62,7 @@ def get_conversation_chain(vectorstore):
     llm = ChatOllama(
         model="llama2:70b-chat",
         callback_manager=CallbackManager([StreamingStdOutCallbackHandler()]),
+        # num_gpu=2
     )
     # llm = HuggingFaceHub(repo_id="google/flan-t5-xxl", model_kwargs={"temperature":0.5, "max_length":512})
 
