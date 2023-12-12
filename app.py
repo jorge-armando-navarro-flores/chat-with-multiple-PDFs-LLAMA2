@@ -10,7 +10,22 @@ from langchain.chat_models import ChatOllama
 from langchain.memory import ConversationBufferMemory
 from langchain.chains import ConversationalRetrievalChain
 from htmlTemplates import css, bot_template, user_template
+from functools import wraps
+import time
 
+
+def timeit(func):
+    @wraps(func)
+    def timeit_wrapper(*args, **kwargs):
+        start_time = time.perf_counter()
+        result = func(*args, **kwargs)
+        end_time = time.perf_counter()
+        total_time = end_time - start_time
+        print(f'\nFunction {func.__name__} Took {total_time:.4f} seconds')
+        return result
+    return timeit_wrapper
+
+@timeit
 def get_pdf_text(pdf_docs):
     text = ""
     for pdf in pdf_docs:
@@ -20,6 +35,7 @@ def get_pdf_text(pdf_docs):
     return text
 
 
+@timeit
 def get_text_chunks(text):
     text_splitter = CharacterTextSplitter(
         separator="\n",
@@ -31,6 +47,7 @@ def get_text_chunks(text):
     return chunks
 
 
+@timeit
 def get_vectorstore(text_chunks):
     embeddings = OllamaEmbeddings()
     # embeddings = HuggingFaceInstructEmbeddings(model_name="hkunlp/instructor-xl")
@@ -38,6 +55,7 @@ def get_vectorstore(text_chunks):
     return vectorstore
 
 
+@timeit
 def get_conversation_chain(vectorstore):
     llm = ChatOllama(
         model="llama2:70b-chat",
@@ -55,6 +73,7 @@ def get_conversation_chain(vectorstore):
     return conversation_chain
 
 
+@timeit
 def handle_userinput(user_question):
     response = st.session_state.conversation({'question': user_question})
     st.session_state.chat_history = response['chat_history']
