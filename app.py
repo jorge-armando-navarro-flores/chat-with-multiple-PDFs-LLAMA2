@@ -14,6 +14,7 @@ from functools import wraps
 import time
 
 
+# Decorator for measuring execution time
 def timeit(func):
     @wraps(func)
     def timeit_wrapper(*args, **kwargs):
@@ -21,10 +22,13 @@ def timeit(func):
         result = func(*args, **kwargs)
         end_time = time.perf_counter()
         total_time = end_time - start_time
-        print(f'\nFunction {func.__name__} Took {total_time:.4f} seconds')
+        print(f"\nFunction {func.__name__} Took {total_time:.4f} seconds")
         return result
+
     return timeit_wrapper
 
+
+# Function to get text from PDF documents
 @timeit
 def get_pdf_text(pdf_docs):
     text = ""
@@ -35,18 +39,17 @@ def get_pdf_text(pdf_docs):
     return text
 
 
+# Function to split text into chunks
 @timeit
 def get_text_chunks(text):
     text_splitter = CharacterTextSplitter(
-        separator="\n",
-        chunk_size=1000,
-        chunk_overlap=200,
-        length_function=len
+        separator="\n", chunk_size=1000, chunk_overlap=200, length_function=len
     )
     chunks = text_splitter.split_text(text)
     return chunks
 
 
+# Function to create a vector store
 @timeit
 def get_vectorstore(text_chunks):
     embeddings = OllamaEmbeddings(
@@ -57,6 +60,7 @@ def get_vectorstore(text_chunks):
     return vectorstore
 
 
+# Function to create a conversation chain
 @timeit
 def get_conversation_chain(vectorstore):
     llm = ChatOllama(
@@ -66,41 +70,44 @@ def get_conversation_chain(vectorstore):
     )
     # llm = HuggingFaceHub(repo_id="google/flan-t5-xxl", model_kwargs={"temperature":0.5, "max_length":512})
 
-    memory = ConversationBufferMemory(
-        memory_key='chat_history', return_messages=True)
+    memory = ConversationBufferMemory(memory_key="chat_history", return_messages=True)
     conversation_chain = ConversationalRetrievalChain.from_llm(
-        llm=llm,
-        retriever=vectorstore.as_retriever(),
-        memory=memory
+        llm=llm, retriever=vectorstore.as_retriever(), memory=memory
     )
     return conversation_chain
 
 
+# Function to handle user input and generate responses
 @timeit
 def handle_userinput(user_question):
-    response = st.session_state.conversation({'question': user_question})
-    st.session_state.chat_history = response['chat_history']
+    response = st.session_state.conversation({"question": user_question})
+    st.session_state.chat_history = response["chat_history"]
 
     for i, message in enumerate(st.session_state.chat_history):
         if i % 2 == 0:
-            st.write(user_template.replace(
-                "{{MSG}}", message.content), unsafe_allow_html=True)
+            st.write(
+                user_template.replace("{{MSG}}", message.content),
+                unsafe_allow_html=True,
+            )
         else:
-            st.write(bot_template.replace(
-                "{{MSG}}", message.content), unsafe_allow_html=True)
+            st.write(
+                bot_template.replace("{{MSG}}", message.content), unsafe_allow_html=True
+            )
 
 
+# Main function
 def main():
     load_dotenv()
-    st.set_page_config(page_title="Chat with multiple PDFs",
-                       page_icon=":books:")
+    st.set_page_config(page_title="Chat with multiple PDFs", page_icon=":books:")
     st.write(css, unsafe_allow_html=True)
 
+    # Initialize session state variables
     if "conversation" not in st.session_state:
         st.session_state.conversation = None
     if "chat_history" not in st.session_state:
         st.session_state.chat_history = None
 
+    # Streamlit app layout
     st.header("Chat with multiple PDFs :books:")
     user_question = st.text_input("Ask a question about your documents:")
     if user_question:
@@ -109,22 +116,22 @@ def main():
     with st.sidebar:
         st.subheader("Your documents")
         pdf_docs = st.file_uploader(
-            "Upload your PDFs here and click on 'Process'", accept_multiple_files=True)
+            "Upload your PDFs here and click on 'Process'", accept_multiple_files=True
+        )
         if st.button("Process"):
             with st.spinner("Processing"):
-                # get pdf text
+                # Get text from PDFs
                 raw_text = get_pdf_text(pdf_docs)
 
-                # get the text chunks
+                # Split text into chunks
                 text_chunks = get_text_chunks(raw_text)
 
-                # create vector store
+                # Create vector store
                 vectorstore = get_vectorstore(text_chunks)
 
                 # create conversation chain
-                st.session_state.conversation = get_conversation_chain(
-                    vectorstore)
+                st.session_state.conversation = get_conversation_chain(vectorstore)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()
